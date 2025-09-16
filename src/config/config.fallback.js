@@ -111,7 +111,7 @@ module.exports = {
     web: envVars.WEB_CLIENT_URL,
   },
   cors: {
-    whitelist: envVars.CORS_WHITELIST ? envVars.CORS_WHITELIST.split(',').map(url => url.trim()) : ['*'],
+    whitelist: envVars.CORS_WHITELIST.split(',').map(url => url.trim()),
   },
   sentry: {
     dns: envVars.SENTRY_DNS_URL,
@@ -126,7 +126,7 @@ module.exports = {
     inputCharacterRate: envVars.INPUT_CHARACTER_RATE.split(',').map((rate) => parseInt(rate.trim(), 10)),
   },
   plagiarismChecker: {
-    allowedPackages: envVars.PLAGIARISM_CHECKER_ALLOWED_PACKAGES.split(',').map((pkg) => pkg.trim()), // Added .map to trim each package
+    allowedPackages: envVars.PLAGIARISM_CHECKER_ALLOWED_PACKAGES.split(',').map((pkg) => pkg.trim()),
   },
   content: {
     ignoresavingdb: envVars.IGNORE_CONTENT_SAVING_EMAIL ? envVars.IGNORE_CONTENT_SAVING_EMAIL.split(',').map((email) => email.trim()) : [],

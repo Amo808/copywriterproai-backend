@@ -20,25 +20,27 @@ const ApiError = require('./utils/ApiError');
 
 const app = express();
 
-// Sentry initial
-Sentry.init({
-  dsn: config.sentry.dns,
-  integrations: [
-    // enable HTTP calls tracing
-    new Sentry.Integrations.Http({ tracing: true }),
-    // enable Express.js middleware tracing
-    new Tracing.Integrations.Express({
-      // to trace all requests to the default router
-      app,
-      // alternatively, you can specify the routes you want to trace:
-      // router: someRouter,
-    }),
-  ],
+// Sentry initial - only if DSN is provided
+if (config.sentry.dns) {
+  Sentry.init({
+    dsn: config.sentry.dns,
+    integrations: [
+      // enable HTTP calls tracing
+      new Sentry.Integrations.Http({ tracing: true }),
+      // enable Express.js middleware tracing
+      new Tracing.Integrations.Express({
+        // to trace all requests to the default router
+        app,
+        // alternatively, you can specify the routes you want to trace:
+        // router: someRouter,
+      }),
+    ],
 
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
+    // We recommend adjusting this value in production, or using tracesSampler
+    // for finer control
+    tracesSampleRate: 1.0,
+  });
+}
 
 if (config.env !== 'test') {
   app.use(morgan.successHandler);
@@ -80,8 +82,8 @@ passport.use('jwt', jwtStrategy);
 passport.use('google', googleStrategy);
 passport.use('facebook', facebookStrategy);
 
-// Sentry error request in production
-if (config.env === 'production') {
+// Sentry error request in production - only if DSN is provided
+if (config.env === 'production' && config.sentry.dns) {
   app.use(Sentry.Handlers.requestHandler());
   app.use(Sentry.Handlers.tracingHandler());
 }
@@ -94,8 +96,27 @@ if (config.env === 'production') {
 // v1 api routes
 app.use('/v1', routes);
 
-// Sentry error handle in production
-if (config.env === 'production') {
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    env: config.env
+  });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'CopywriterProAI Backend API',
+    version: '1.0.0',
+    status: 'running'
+  });
+});
+
+// Sentry error handle in production - only if DSN is provided
+if (config.env === 'production' && config.sentry.dns) {
   app.use(Sentry.Handlers.errorHandler());
 }
 
