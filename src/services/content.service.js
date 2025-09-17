@@ -10,7 +10,17 @@ const generateContentWithModel = async (model, maxTokens, prompt, temperature, f
   let gptResponse;
   let count = 0; // will try to generate content for maximum 10 times
 
-  const openai = new OpenAI(apiKey); // Use the provided API key to create OpenAI instance
+  // Check if API key is provided
+  if (!apiKey || apiKey.trim() === '') {
+    throw new ApiError(httpStatus.SERVICE_UNAVAILABLE, 'OpenAI API key not provided. Content generation is not available.');
+  }
+
+  let openai;
+  try {
+    openai = new OpenAI({ apiKey }); // Use the provided API key to create OpenAI instance
+  } catch (error) {
+    throw new ApiError(httpStatus.SERVICE_UNAVAILABLE, 'Failed to initialize OpenAI client: ' + error.message);
+  }
 
   while (count < 10) {
     try {

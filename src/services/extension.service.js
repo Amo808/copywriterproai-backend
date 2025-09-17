@@ -8,9 +8,38 @@ const { Extension } = require('../models');
 const config = require('../config/config');
 
 const { openAIAPIKey } = config.openAI;
-const openai = new OpenAI(openAIAPIKey);
+
+// Initialize OpenAI only if API key is provided and valid
+let openai = null;
+let openaiInitialized = false;
+
+const initializeOpenAI = () => {
+  if (!openaiInitialized) {
+    try {
+      if (openAIAPIKey && openAIAPIKey.trim() !== '' && openAIAPIKey !== 'demo') {
+        openai = new OpenAI({ apiKey: openAIAPIKey });
+        console.log('OpenAI initialized successfully');
+      } else {
+        console.log('OpenAI not initialized - API key not provided or is demo key');
+      }
+    } catch (error) {
+      console.warn('OpenAI initialization failed:', error.message);
+      openai = null;
+    }
+    openaiInitialized = true;
+  }
+  return openai;
+};
 
 const generateContentWithModel = async (engine, maxTokens, prompt, temperature, frequencyPenalty, presencePenalty, stop) => {
+  // Initialize OpenAI if not already done
+  const openaiClient = initializeOpenAI();
+  
+  // Check if OpenAI is available
+  if (!openaiClient) {
+    throw new ApiError(httpStatus.SERVICE_UNAVAILABLE, 'OpenAI API key not configured. Content generation is not available.');
+  }
+
   // let filterLabel = await filterContents(prompt);
   // if (filterLabel === '2') {
   //   throw new ApiError(httpStatus.BAD_REQUEST, 'Input contains unsafe contents!');
@@ -39,7 +68,7 @@ const generateContentWithModel = async (engine, maxTokens, prompt, temperature, 
   let gptResponse;
 
   while (1) {
-    gptResponse = await openai.complete({
+    gptResponse = await openaiClient.complete({
       engine,
       prompt,
       maxTokens,
@@ -63,7 +92,16 @@ const generateContentWithModel = async (engine, maxTokens, prompt, temperature, 
 };
 
 const filterContents = async (content) => {
-  const response = await openai.complete({
+  // Initialize OpenAI if not already done
+  const openaiClient = initializeOpenAI();
+  
+  // Check if OpenAI is available
+  if (!openaiClient) {
+    // Return safe label if OpenAI is not available
+    return '0';
+  }
+
+  const response = await openaiClient.complete({
     engine: 'gpt-4-turbo-2024-04-09',
     prompt: `${content}\n--\nLabel:`,
     max_tokens: 1,
