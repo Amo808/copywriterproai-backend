@@ -110,7 +110,8 @@ app.get('/health', (req, res) => {
     status: 'OK', 
     message: 'Server is running',
     timestamp: new Date().toISOString(),
-    env: config.env
+    env: config.env,
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
 });
 
@@ -119,7 +120,26 @@ app.get('/', (req, res) => {
   res.status(200).json({ 
     message: 'CopywriterProAI Backend API',
     version: '1.0.0',
-    status: 'running'
+    status: 'running',
+    endpoints: {
+      health: '/health',
+      api: '/v1',
+      auth: '/v1/auth'
+    }
+  });
+});
+
+// Test endpoint to check basic functionality
+app.get('/test', (req, res) => {
+  res.status(200).json({
+    message: 'Test endpoint working',
+    timestamp: new Date().toISOString(),
+    config: {
+      env: config.env,
+      corsWhitelist: config.cors.whitelist,
+      mongoUrl: config.mongoose.url ? 'configured' : 'not configured',
+      jwtSecret: config.jwt.secret ? 'configured' : 'not configured'
+    }
   });
 });
 

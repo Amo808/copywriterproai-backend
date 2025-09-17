@@ -24,6 +24,18 @@ const errorConverter = (err, req, res, next) => {
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
   let { statusCode, message } = err;
+  
+  // Log error details for debugging
+  console.error('Error occurred:', {
+    message: err.message,
+    statusCode: err.statusCode,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+    body: req.body,
+    env: config.env
+  });
+  
   if (config.env === 'production' && !err.isOperational) {
     statusCode = httpStatus.INTERNAL_SERVER_ERROR;
     message = httpStatus[httpStatus.INTERNAL_SERVER_ERROR];
@@ -34,7 +46,15 @@ const errorHandler = (err, req, res, next) => {
   const response = {
     status: statusCode,
     message,
+    url: req.url,
+    method: req.method,
+    timestamp: new Date().toISOString(),
     ...(config.env === 'development' && { stack: err.stack }),
+    // Add more details in development
+    ...(config.env !== 'production' && { 
+      originalMessage: err.message,
+      errorType: err.constructor.name
+    }),
   };
 
   if (config.env === 'development') {
