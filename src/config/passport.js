@@ -7,13 +7,17 @@ const { authTypes } = require('./auths');
 const { tokenTypes } = require('./tokens');
 const { User } = require('../models');
 
-// Check if the environment is development
-const isDevelopment = process.env.NODE_ENV === 'development';
+// Define the base URL based on environment
+const getBaseURL = () => {
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:8080';
+  }
+  // Use environment variable for production URL, fallback to current Vercel URL
+  return process.env.API_BASE_URL || 'https://copywriterproai-backend-nine.vercel.app';
+};
 
 // Define the Google OAuth callback URL based on the environment
-const googleCallbackURL = isDevelopment
-  ? 'http://localhost:8080/v1/auth/google/callback'
-  : 'https://api.copywriterpro.ai/v1/auth/google/callback';
+const googleCallbackURL = `${getBaseURL()}/v1/auth/google/callback`;
 
 // Options for JWT strategy
 const jwtOptions = {
@@ -33,7 +37,7 @@ const googleOptions = {
 const facebookOptions = {
   clientID: facebookOauth.appId,
   clientSecret: facebookOauth.appSecret,
-  callbackURL: 'https://api.copywriterpro.ai/v1/auth/facebook/callback',
+  callbackURL: `${getBaseURL()}/v1/auth/facebook/callback`,
   profileFields: ['email', 'displayName', 'photos', 'first_name', 'last_name'],
 };
 
