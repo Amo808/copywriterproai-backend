@@ -91,6 +91,7 @@ userSchema.statics.isVerifiedEmailTaken = async function (email) {
 };
 
 // Check if password matches the user's password
+// Updated for OAuth compatibility - Sept 17, 2025
 userSchema.methods.isPasswordMatch = async function (password) {
   const user = this;
   // If user doesn't have a password (OAuth user), return false
