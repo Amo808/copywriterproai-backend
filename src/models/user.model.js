@@ -32,7 +32,10 @@ const userSchema = mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function() {
+        // Password is required only for email authentication
+        return this.authType === 'email';
+      },
       trim: true,
       private: true, // used by the toJSON plugin
     },
@@ -90,12 +93,16 @@ userSchema.statics.isVerifiedEmailTaken = async function (email) {
 // Check if password matches the user's password
 userSchema.methods.isPasswordMatch = async function (password) {
   const user = this;
+  // If user doesn't have a password (OAuth user), return false
+  if (!user.password) {
+    return false;
+  }
   return bcrypt.compare(password, user.password);
 };
 
 userSchema.pre('save', async function (next) {
   const user = this;
-  if (user.isModified('password')) {
+  if (user.isModified('password') && user.password) {
     user.password = await bcrypt.hash(user.password, 8);
   }
   next();
