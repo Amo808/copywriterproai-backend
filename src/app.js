@@ -9,6 +9,7 @@ const passport = require('passport');
 const httpStatus = require('http-status');
 const Sentry = require('@sentry/node');
 const Tracing = require('@sentry/tracing');
+const mongoose = require('mongoose');
 const config = require('./config/config');
 const morgan = require('./config/morgan');
 const corsOptions = require('./config/corsoptions');
@@ -17,6 +18,13 @@ const { authLimiter } = require('./middlewares/rateLimiter');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./utils/ApiError');
+
+// Initialize MongoDB connection for serverless
+if (process.env.VERCEL) {
+  mongoose.connect(config.mongoose.url, config.mongoose.options).catch((error) => {
+    console.error('MongoDB connection error:', error);
+  });
+}
 
 const app = express();
 
